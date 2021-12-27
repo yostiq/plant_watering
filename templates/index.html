@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Plant watering</title>
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylesheets/style.css') }}" type="text/css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="{{ url_for('static', filename='scripts/scripts.js') }}"></script>
+    <script src="{{ url_for('static', filename='scripts/chart.js') }}"></script>
+</head>
+
+<body>
+    <div id="header-box">
+        <div id="header">
+            <h1>Plant Watering</h1>
+        </div>
+    </div>
+    
+    <div id="main-content">
+        <form method="post" action="/" style="display: flex; justify-content: center;">
+            <input type="submit" name="mqtt" value="Water the plant" style="background-color: #93B7C2; text-align: center; font-size: 16px;">
+            <input type="submit" name="mqtt" value="Pump on" style="background-color: #93B7C2; text-align: center; font-size: 16px;">
+            <input type="submit" name="mqtt" value="Pump off" style="background-color: #93B7C2; text-align: center; font-size: 16px;">
+        </form>
+        <h1>Graphs for the last 24h</h1>
+        <div class="flex-container" style="display: flex; flex-flow: row wrap;">
+            <div class="flex-item" style="width: 50%;">
+                <canvas id="moistureChart"></canvas>
+            </div>
+            <div class="flex-item" style="width: 50%;">
+                <canvas id="tempChart"></canvas>
+            </div>
+            <div class="flex-item " style="width: 50%;">
+                <canvas id="humidityChart"></canvas>
+            </div>
+            <div class="flex-item" style="width: 50%;">
+                <canvas id="lightChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    
+    
+    <script>
+
+        const moistureData = {
+            datasets: [{
+                label: 'Moisture %',
+                backgroundColor: '#baffc9',
+                borderColor: '#baffc9',
+                data: [{% for key, value in moisture.items()|reverse recursive %} {x: '{{value.date}}', y: {{value.value}}}{% if not loop.last %},{% endif %}{% endfor %}],
+            }]
+        };
+        const tempData = {
+            datasets: [{
+                label: 'Temperature',
+                backgroundColor: '#ffb3ba',
+                borderColor: '#ffb3ba',
+                //data: [{x: '2021-11-25 14:16:59.633836', y: 10}, {x: '2021-11-25 14:15:59.635173', y: 24.2}],
+                data: [{% for key, value in temperature.items()|reverse recursive %} {x: '{{value.date}}', y: {{value.value}}}{% if not loop.last %},{% endif %}{% endfor %}],
+            }]
+        };
+        const humidityData = {
+            datasets: [{
+                label: 'Humidity %',
+                backgroundColor: '#bae1ff',
+                borderColor: '#bae1ff',
+                data: [{% for key, value in humidity.items()|reverse recursive %} {x: '{{value.date}}', y: {{value.value}}}{% if not loop.last %},{% endif %}{% endfor %}],
+            }]
+        };
+        const lightData = {
+            datasets: [{
+                label: 'Light %',
+                backgroundColor: '#ffffba',
+                borderColor: '#ffffba',
+                data: [{% for key, value in light.items()|reverse recursive %} {x: '{{value.date}}', y: {{value.value}}}{% if not loop.last %},{% endif %}{% endfor %}],
+            }]
+        };
+
+        const moistureConfig = {
+            type: 'line',
+            data: moistureData,
+            options: {
+                scales: {
+                    y: {
+                        suggestedMin: 0,
+                        suggestedMax: 100,
+                        ticks: {
+                            color: 'white'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxTicksLimit: 12,
+                            color: 'white'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'white',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        const tempConfig = {
+            type: 'line',
+            data: tempData,
+            options: {
+                scales: {
+                    y: {
+                        suggestedMin: 10,
+                        suggestedMax: 30,
+                        ticks: {
+                            color: 'white'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxTicksLimit: 12,
+                            color: 'white'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'white',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        const humidityConfig = {
+            type: 'line',
+            data: humidityData,
+            options: {
+                scales: {
+                    y: {
+                        suggestedMin: 10,
+                        suggestedMax: 60,
+                        ticks: {
+                            color: 'white'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxTicksLimit: 12,
+                            color: 'white'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'white',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        const lightConfig = {
+            type: 'line',
+            data: lightData,
+            options: {
+                scales: {
+                    y: {
+                        suggestedMin: 0,
+                        suggestedMax: 100,
+                        ticks: {
+                            color: 'white'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxTicksLimit: 12,
+                            color: 'white'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: 'white',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        const moistureChart = new Chart(
+            document.getElementById('moistureChart'),
+            moistureConfig
+        );
+
+        const tempChart = new Chart(
+            document.getElementById('tempChart'),
+            tempConfig
+        );
+
+        const humidityChart = new Chart(
+            document.getElementById('humidityChart'),
+            humidityConfig
+        );
+
+        const lightChart = new Chart(
+            document.getElementById('lightChart'),
+            lightConfig
+        );
+    </script>
+
+</body>
+</html>
